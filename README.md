@@ -4,10 +4,10 @@ Implement a monitor that resolves bounded producer/consumer problem using semaph
 
 ## The program is compiled with the command: 
 
-$ gcc monitor.c -o exe -pthread
+> $ gcc monitor.c -o exe -pthread
   
 ## The program is run with:
-$ ./exe 
+> $ ./exe 
  
 ## The stuctucture for the input is:
 * size of buffer
