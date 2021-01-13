@@ -11,14 +11,14 @@ struct Monitor {
     sem_t mutex, full, empty;
 }m;
 
-inline int semWait(sem_t* sem) {
+int semWait(sem_t* sem) {
     if(sem_wait(sem)) {
         perror(NULL);
         return errno;
     }
 }
 
-inline int semPost(sem_t* sem) {
+int semPost(sem_t* sem) {
     if(sem_post(sem)) {
         perror(NULL);
         return errno;
@@ -84,24 +84,28 @@ int main (int argc, char*argv[]) {
 
     int sizeBuff, numOfProducer, numOfConsumer;
     scanf("%d%d", &sizeBuff, &numOfProducer);
-    if (sizeBuff == 0 || numOfProducer == 0) {
-        printf("Wrong input\n");
-        return 0;
-    }
 
     int prod[numOfProducer];
+    int prod_sum = 0;
     for (int i = 0; i < numOfProducer; i++) {
         scanf("%d", &prod[i]);
+        prod_sum += prod[i];
     }
 
     scanf("%d", &numOfConsumer);
-    if(numOfConsumer == 0) {
-        printf("Wrong input\n");
-        return 0;
-    }
+    int cons_sum = 0;
     int cons[numOfConsumer];
     for( int i = 0; i < numOfConsumer; i++) {
         scanf("%d", &cons[i]);
+        cons_sum += cons[i];
+    }
+    if (cons_sum > prod_sum) {
+        printf("Too many requests!\n");
+        return 0;
+    }
+    if (prod_sum - cons_sum > sizeBuff) {
+        printf("Buffer size is too small\n");
+        return 0;
     }
 
     init (&m, sizeBuff);
@@ -126,11 +130,31 @@ int main (int argc, char*argv[]) {
     }
 
     for(int i = 0; i < numOfProducer;i++) {
-        pthread_join(ptid[i], NULL);
+        if (pthread_join(ptid[i], NULL)) {
+            perror(NULL);
+            return errno;
+        }
     }
 
     for(int i = 0; i < numOfConsumer;i++) {
-        pthread_join(ctid[i], NULL);
+        if (pthread_join(ctid[i], NULL)) {
+            perror(NULL);
+            return errno;
+        }
+    }
+
+    if (sem_destroy (&m.mutex) ) {
+        perror(NULL);
+        return errno;
+    }
+    
+    if (sem_destroy (&m.empty) ) {
+        perror(NULL);
+        return errno;
+    }
+    if (sem_destroy (&m.full) ) {
+        perror(NULL);
+        return errno;
     }
     
     return 0;
